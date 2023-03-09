@@ -7,9 +7,13 @@ class List {
     this.items.push(taskName);
   }
 
+  removeItems(index) {
+    this.items.splice(index, 1);
+  }
+
   displayList(listItem) {
     listItem.innerHTML = "";
-    this.items.forEach((element) => {
+    this.items.forEach((element, index) => {
       let div = document.createElement("div");
       div.classList.add("item-background", "mx-auto", "my-auto", "mb-2");
 
@@ -24,27 +28,44 @@ class List {
       deleteButton.classList.add("btn", "btn-danger", "me-2");
       deleteButton.appendChild(i);
       deleteButton.append("Delete");
+      deleteButton.addEventListener("click", () => {
+        this.removeItems(index);
+        this.displayList(listItem);
+      });
 
       div.appendChild(span);
       div.appendChild(deleteButton);
       listItem.appendChild(div);
 
-      console.log(element);
+      document.querySelector("#inputValue").value = ``;
     });
   }
 }
 
 const input = document.querySelector("#inputValue");
 const button = document.querySelector("#searchButton");
-const listItem = document.querySelector("#radi");
+const listItem = document.querySelector("#mainDiv");
+
+button.addEventListener("click", addItem);
+input.addEventListener("keypress", pressEnter);
 
 let list = new List();
 
-function addItem() {
+function addItem(event) {
   const taskName = input.value;
-
-  list.addItems(taskName);
-  list.displayList(listItem);
+  if (taskName === "") {
+    event.preventDefault();
+    input.placeholder = "You must write something!";
+  } else {
+    input.placeholder = "Add item to list";
+    list.addItems(taskName);
+    list.displayList(listItem);
+  }
 }
 
-button.addEventListener("click", addItem);
+function pressEnter(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    button.click();
+  }
+}
