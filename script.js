@@ -1,71 +1,117 @@
-class List {
-  constructor() {
-    this.items = [];
+class ToDoList {
+  constructor(data) {
+    this.tasks = data;
   }
 
-  addItems(taskName) {
-    this.items.push(taskName);
+  addTasks(task) {
+    this.tasks.push(task);
   }
 
-  removeItems(index) {
-    this.items.splice(index, 1);
+  removeTasks(index) {
+    return this.tasks.splice(index, 1);
   }
+}
 
-  displayList(listItem) {
-    listItem.innerHTML = "";
-    this.items.forEach((element, index) => {
-      let div = document.createElement("div");
-      div.classList.add("item-background", "mx-auto", "my-auto", "mb-2");
+class Task {
+  constructor(name) {
+    this.name = name;
+    this.done = false;
+  }
+}
 
-      let i = document.createElement("i");
-      i.classList.add("bi", "bi-trash");
+class UserInterface {
+  constructor(list) {
+    this.list = list;
+    this.addButton = document.querySelector("#searchButton");
 
-      let span = document.createElement("span");
-      span.classList.add("ms-2");
-      span.append(element);
-
-      let deleteButton = document.createElement("button");
-      deleteButton.classList.add("btn", "btn-danger", "me-2");
-      deleteButton.appendChild(i);
-      deleteButton.append("Delete");
-      deleteButton.addEventListener("click", () => {
-        this.removeItems(index);
-        this.displayList(listItem);
-      });
-
-      div.appendChild(span);
-      div.appendChild(deleteButton);
-      listItem.appendChild(div);
-
-      document.querySelector("#inputValue").value = ``;
+    this.addButton.addEventListener("click", () => {
+      this.addTask();
     });
   }
-}
 
-const input = document.querySelector("#inputValue");
-const button = document.querySelector("#searchButton");
-const listItem = document.querySelector("#mainDiv");
+  updatedTasks() {
+    fetch("https://to-do-list-1715f-default-rtdb.firebaseio.com/tasks.json")
+      .then((res) => res.json())
+      .then((data) => {
+        let list = new ToDoList(data);
+        let tasks = new UserInterface(list.tasks);
+        tasks.display();
+      })
+      .catch((err) => console.log(err));
+  }
 
-button.addEventListener("click", addItem);
-input.addEventListener("keypress", pressEnter);
+  display() {
+    Object.values(this.list).forEach((element) => {
+      this.createDivForTask(element.name, element.done);
+    });
+  }
 
-let list = new List();
+  createDivForTask(elementName, elementDone) {
+    let mainDiv = document.querySelector("#mainDiv");
+    let taskDiv = document.createElement("div");
+    taskDiv.classList.add("item-background", "mb-2", "mx-auto");
+    taskDiv.append(this.createParagraph(elementName));
 
-function addItem(event) {
-  const taskName = input.value;
-  if (taskName === "") {
-    event.preventDefault();
-    input.placeholder = "You must write something!";
-  } else {
-    input.placeholder = "Add item to list";
-    list.addItems(taskName);
-    list.displayList(listItem);
+    let buttonHolder = document.createElement("div");
+    buttonHolder.append(this.createDoneButton(elementDone));
+    buttonHolder.append(this.createDeleteButton());
+    taskDiv.appendChild(buttonHolder);
+    mainDiv.appendChild(taskDiv);
+  }
+
+  createParagraph(elementName) {
+    let p = document.createElement("p");
+    p.append(elementName);
+    p.classList.add("my-auto", "ms-2");
+    return p;
+  }
+
+  createDeleteButton() {
+    let deleteButton = document.createElement("button");
+    deleteButton.classList.add("bi", "bi-trash", "btn", "bg-danger", "me-2");
+    return deleteButton;
+  }
+
+  createDoneButton(elementDone) {
+    let doneButton = document.createElement("button");
+    if (elementDone === true) {
+      doneButton.classList.add("bi", "bi-check2", "btn", "bg-danger", "me-2");
+      return doneButton;
+    } else {
+      doneButton.classList.add("bi", "bi-x", "btn", "bg-danger", "me-2");
+      return doneButton;
+    }
+  }
+
+  addTask() {
+    const inputValue = document.querySelector("#inputValue").value.trim();
+    if (inputValue !== "") {
+      const task = new Task(inputValue);
+      this.updateTasks(task);
+      document.querySelector("#inputValue").value = "";
+      document.querySelector("#mainDiv").innerHTML = ``;
+      this.updatedTasks();
+    }
+  }
+
+  updateTasks(task) {
+    fetch(`https://to-do-list-1715f-default-rtdb.firebaseio.com/tasks.json`, {
+      method: "POST",
+      body: JSON.stringify(task),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data))
+      .catch((err) => console.log(err));
   }
 }
-
-function pressEnter(event) {
-  if (event.key === "Enter") {
-    event.preventDefault();
-    button.click();
-  }
-}
+fetch("https://to-do-list-1715f-default-rtdb.firebaseio.com/tasks.json")
+  .then((res) => res.json())
+  .then((data) => {
+    let list = new ToDoList(data);
+    let tasks = new UserInterface(list.tasks);
+    tasks.display();
+  })
+  .catch((err) => console.log(err));

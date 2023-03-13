@@ -31,3 +31,9 @@ body {
     font-size: 1.5rem;
     border-radius: 0.30rem;
 }
+
+.done-task {
+    text-decoration: line-through;
+    font-style: italic;
+    color: #FF0000;
+}
